@@ -25,7 +25,7 @@ def last_blend(theta_f, alpha, t, tf):
     return [theta - a * tf * tf / 2 + a * tf * t - a * t * t / 2 for theta, a in zip(theta_f, alpha)]
 
 
-def lspb(theta_i, theta_f, tf, tb):
+def lspb(theta_i, theta_f, tf, tb, step=0.1):
     v = []
     alpha = []
     for i, f in zip(theta_i, theta_f):
@@ -35,7 +35,7 @@ def lspb(theta_i, theta_f, tf, tb):
         alpha.append(result_alpha)
 
     theta_list = []
-    for t in np.arange(0, tf, 0.1):
+    for t in np.arange(0, tf, step):
         if t <= tb:
             theta_list.append(first_blend(theta_i, alpha, t))
         elif t <= (tf - tb):
