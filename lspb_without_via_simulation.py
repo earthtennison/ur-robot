@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 import math
 
 ####### config ########
-l1 = 400 # mm
-l2 = 400 # mm
+l1 = 400  # mm
+l2 = 400  # mm
 
 ######################
 
@@ -45,38 +45,42 @@ def lspb(theta_i, theta_f, tf, tb, step=0.1):
 
     return theta_list
 
+
 def fk(theta_list):
-    x_list=[]
-    y_list=[]
-    
+    x_list = []
+    y_list = []
+
     for theta1, theta2 in theta_list:
-        x_list.append((l1*math.cos(math.radians(theta1))) + (l2*math.cos(math.radians(theta1+theta2))))
-        y_list.append((l1*math.sin(math.radians(theta1))) + (l2*math.sin(math.radians(theta1+theta2))))
-    
+        x_list.append((l1*math.cos(math.radians(theta1))) +
+                      (l2*math.cos(math.radians(theta1+theta2))))
+        y_list.append((l1*math.sin(math.radians(theta1))) +
+                      (l2*math.sin(math.radians(theta1+theta2))))
+
     return x_list, y_list
+
 
 def ik(theta_list):
     pass
 
+
 def plot(y_list, x_list):
 
-    ## TODO siulate arm
-
+    # TODO siulate arm
 
     x, y = np.array(x_list), np.array(y_list)
     print(x_list, y_list)
-    plt.plot(x,y, 'bo', linewidth = 2)
+    plt.plot(x, y, 'bo', linewidth=2)
     plt.show()
 
+
 if __name__ == "__main__":
-    
+
     ######## parameter #########
     theta_i = [30, 20]
     theta_f = [40, 50]
     tf = 5
     tb = 2
     ############################
-
 
     theta_list = lspb(theta_i, theta_f, tf, tb)
     # print(theta_list)
