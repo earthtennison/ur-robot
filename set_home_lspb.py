@@ -25,6 +25,7 @@ def main():
 
     current_joint = "[d2r(0),d2r(-100),d2r(90.24),d2r(-90),d2r(-180),d2r(0)]"
     # current_joint = "[d2r(0),d2r(-100.82),d2r(56.36),d2r(-90),d2r(-180),d2r(0)]"
+    # current_joint = "[d2r(0), d2r(-110.55), d2r(75.48), d2r(-34.35), d2r(-180), d2r(30.33)]"
     # start
     s.send(bytes("movej({},1,0.25,10,0)".format(current_joint) + "\n", "utf-8"))
     time.sleep(3)

@@ -206,13 +206,45 @@ def generate_via_point_theta(theta_i, theta_f, via_points_count):
     return theta_via_list
 
 
+def filter_list_length(ll):
+    min_length = min([len(theta) for theta in theta_list_6_joints])
+
+    filtered_ll = []
+    for l in ll:
+        l = l[:min_length]
+        l = np.array(l).reshape(-1, 1)
+        filtered_ll.append(l)
+    return filtered_ll
+
+
+def create_traj(p1, p2):
+    theta_6_joints = []
+    for theta_i, theta_f in zip(p1, p2):
+        # print("theta_i: {}, theta_f: {}".format(theta_i, theta_f))
+        # print("theta_via_points: {}".format(generate_via_point_theta(theta_i, theta_f, via_points_count)))
+        theta_6_joints.append(generate_via_point_theta(theta_i, theta_f, via_points_count))
+
+    theta_list_6_joints = []
+    for theta_via_points in theta_6_joints:
+        if theta_via_points[-1] == theta_via_points[0]:
+            theta_list_6_joints.append([theta_via_points[0]] * int(sum(td) / small_time_step))
+            continue
+        tn, tn_via, v, new_alpha = get_time(theta_via_points, alpha, td)
+        theta_list1 = lspb(tn, tn_via, v, new_alpha, theta_via_points[0], step=small_time_step)
+        theta_list_6_joints.append(theta_list1)
+        # print("theta_list_6_joints: {}".format(theta_list_6_joints))
+    # print([len(theta) for theta in theta_list_6_joints])
+
+    theta_list_6_joints = filter_list_length(theta_list_6_joints)
+
+    theta_list = np.concatenate((theta_list_6_joints[0], theta_list_6_joints[1], theta_list_6_joints[2],
+                                 theta_list_6_joints[3], theta_list_6_joints[4], theta_list_6_joints[5]), axis=1)
+    # print(theta_list)
+    return theta_list
+
+
 if __name__ == '__main__':
     print("program running...")
-
-    tf = 5
-    tb = 1
-    theta_i = [0, 0]
-    theta_f = [0, 0]
 
     # Establish connection to controller
     HOST = '10.10.0.26'
@@ -225,92 +257,34 @@ if __name__ == '__main__':
     # move in star
 
     ######## parameter #########
-    # p1 = [400, 400]
-    # p2 = [500, 500]
-    # step = 10  # step of x [mm]
-    # small_time_step = 0.01  # [second]
-    # alpha = int((p2[0] - p1[0]) / step) * [10]  # interval counts * [desired angular acceleration]
-    # td = int((p2[0] - p1[0]) / step) * [1]  # interval counts * [desired time duration [s]]
+    p1 = [-0.40645, 0.2157, 0.59268, 2.749, 2.318, 2.340]
+    p2 = [-0.307, 0.2157, 0.555, 2.749, 2.318, 2.340]
+    p3 = [-0.2598, 0.2157, 0.68118, 2.749, 2.318, 2.340]
+    p3 = [-0.2598, 0.2157, 0.68118, 2.749, 2.318, 2.340]
+    p3 = [-0.2598, 0.2157, 0.68118, 2.749, 2.318, 2.340]
 
-    # initial -> 0,-100,90.24,-90,-180,0
-    # final -> 0,-100,90.24,-90,-180,0
-    p1_theta = [0, -100, 90.24, -90, -180, 0]
-    p2_theta = [0, -110.55, 75.48, -34.35, -180, 30.33]
     small_time_step = 0.008  # [second]
     step_joint = 1  # step of joint [deg]
     via_points_count = 10
-    alpha = (via_points_count + 1) * [50]  # interval counts * [desired angular acceleration]
-    td = (via_points_count + 1) * [5]  # interval counts * [desired time duration [s]]
+    alpha = (via_points_count) * [50]  # interval counts * [desired angular acceleration]
+    td = (via_points_count) * [5]  # interval counts * [desired time duration [s]]
     ############################
 
-    # x_via_list, y_via_list = generate_via_point(p1, p2, step=step)
-    # plot(x_via_list, y_via_list)
-    # plt.plot(x_via_list, y_via_list, "ro")
-
-    # theta_via_points1 = []
-    # theta_via_points2 = []
-    # for x, y in zip(x_via_list, y_via_list):
-    #     theta1, theta2 = ik_2dof(x, y)
-    #     theta_via_points1.append(theta1)
-    #     theta_via_points2.append(theta2)
-
-    # theta1_via_list, theta2_via_list = generate_via_point(p1_theta, p2_theta, step=5)
-    theta_6_joints = []
-    for theta_i, theta_f in zip(p1_theta, p2_theta):
-        print("theta_i: {}, theta_f: {}".format(theta_i, theta_f))
-        print("theta_via_points: {}".format(generate_via_point_theta(theta_i, theta_f, via_points_count)))
-        theta_6_joints.append(generate_via_point_theta(theta_i, theta_f, via_points_count))
-
-    theta_list_6_joints = []
-    for theta_via_points in theta_6_joints:
-        if theta_via_points[-1] == theta_via_points[0]:
-            theta_list_6_joints.append([theta_via_points[0]] * int(sum(td) / small_time_step))
-            continue
-        tn, tn_via, v, new_alpha = get_time(theta_via_points, alpha, td)
-        theta_list1 = lspb(tn, tn_via, v, new_alpha, theta_via_points[0], step=small_time_step)
-        theta_list_6_joints.append(theta_list1)
-        # print("theta_list_6_joints: {}".format(theta_list_6_joints))
-    print([len(theta) for theta in theta_list_6_joints])
-
-
-    # tn_2, tn_via_2, v_2, new_alpha_2 = get_time(theta_via_points2, alpha, td)
-    # theta_list2 = lspb(tn_2, tn_via_2, v_2, new_alpha_2, theta_via_points2[0], step=small_time_step)
-
-    def filter_list_length(ll):
-        min_length = min([len(theta) for theta in theta_list_6_joints])
-
-        filtered_ll = []
-        for l in ll:
-            l = l[:min_length]
-            l = np.array(l).reshape(-1, 1)
-            filtered_ll.append(l)
-        return filtered_ll
-
-
-    # print(len(theta_list1), len(theta_list2))
-    # if len(theta_list1) > len(theta_list2):
-    #     theta_list1 = theta_list1[:len(theta_list2)]
-    # elif len(theta_list1) < len(theta_list2):
-    #     theta_list2 = theta_list2[:len(theta_list1)]
-
-    theta_list_6_joints = filter_list_length(theta_list_6_joints)
-
-    # theta_list1, theta_list2 = np.array(theta_list1).reshape(-1, 1), np.array(theta_list2).reshape(-1, 1)
-    # theta_list1, theta_list2 = theta_list1.reshape(theta_list1.shape[0],1)
-    # print(theta_list1)
-
-    theta_list = np.concatenate((theta_list_6_joints[0], theta_list_6_joints[1], theta_list_6_joints[2],
-                                 theta_list_6_joints[3], theta_list_6_joints[4], theta_list_6_joints[5]), axis=1)
-    print(theta_list)
+    theta_list = []
+    theta_list.append(create_traj(p1, p2))
+    theta_list.append(create_traj(p2, p3))
+    theta_list.append(create_traj(p3, p4))
+    theta_list.append(create_traj(p4, p5))
+    theta_list.append(create_traj(p5, p6))
 
     for theta1, theta2, theta3, theta4, theta5, theta6 in theta_list:
-        print("servoj([d2r({}),d2r({}),d2r({}),d2r({}),d2r({}),d2r({})], 0, 0, {}, 0.1, 1000)".format(theta1, theta2, theta3,
-                                                                                            theta4, theta5, theta6,
-                                                                                            small_time_step))
+        print("servoj(get_inverse_kin(p[{},{},{},{},{},{}]), 0, 0, {}, 0.1, 1000)".format(theta1, theta2, theta3,
+                                                                                          theta4, theta5, theta6,
+                                                                                          small_time_step))
         s.send(bytes(
-            "servoj([d2r({}),d2r({}),d2r({}),d2r({}),d2r({}),d2r({})], 0, 0, {}, 0.1, 1000)".format(theta1, theta2, theta3,
-                                                                                            theta4, theta5, theta6,
-                                                                                            small_time_step) + "\n",
+            "servoj(get_inverse_kin(p[{},{},{},{},{},{}]), 0, 0, {}, 0.1, 1000)".format(theta1, theta2, theta3,
+                                                                                        theta4, theta5, theta6,
+                                                                                        small_time_step) + "\n",
             "utf-8"))
 
     time.sleep(10)
