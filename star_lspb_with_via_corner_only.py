@@ -217,25 +217,30 @@ def filter_list_length(ll):
     return filtered_ll
 
 
-def create_traj(p1, p2):
-    theta_6_joints = []
-    for theta_i, theta_f in zip(p1, p2):
-        # print("theta_i: {}, theta_f: {}".format(theta_i, theta_f))
-        # print("theta_via_points: {}".format(generate_via_point_theta(theta_i, theta_f, via_points_count)))
-        theta_6_joints.append(generate_via_point_theta(theta_i, theta_f, via_points_count))
+def create_traj(p_list):
+
+    theta_6_joints = np.transpose(np.array(p_list))
     print(theta_6_joints)
+
     theta_list_6_joints = []
-    for theta_via_points in theta_6_joints:
-        if theta_via_points[-1] == theta_via_points[0]:
-            theta_list_6_joints.append([theta_via_points[0]] * int(sum(td) / small_time_step))
+    for i,theta_via_points in enumerate(theta_6_joints):
+        if theta_via_points[0] == theta_via_points[1]:
+            theta_list_6_joints.append([theta_via_points[0]] * int(td[i]*5/small_time_step))
+            print("im in")
             continue
         tn, tn_via, v, new_alpha = get_time(theta_via_points, alpha, td)
         theta_list1 = lspb(tn, tn_via, v, new_alpha, theta_via_points[0], step=small_time_step)
+
+        # print(len(theta_list1))
+
         theta_list_6_joints.append(theta_list1)
         # print("theta_list_6_joints: {}".format(theta_list_6_joints))
     # print([len(theta) for theta in theta_list_6_joints])
 
+    print([len(theta) for theta in theta_list_6_joints])
+    # print(theta_list_6_joints)
     theta_list_6_joints = filter_list_length(theta_list_6_joints)
+
 
     theta_list = np.concatenate((theta_list_6_joints[0], theta_list_6_joints[1], theta_list_6_joints[2],
                                  theta_list_6_joints[3], theta_list_6_joints[4], theta_list_6_joints[5]), axis=1)
@@ -265,35 +270,29 @@ if __name__ == '__main__':
     p5 = p0 + np.array([0, 0, 0.1, 0, 0, 0])
     p6 = p1
 
-    # p1 = [-0.40645, 0.2157, 0.69268, 2.749, 2.318, 2.340]
-    # p2 = [-0.307, 0.2157, 0.582, 2.749, 2.318, 2.340]
-    # p3 = [-0.311, 0.2157, 0.76268, 2.749, 2.318, 2.340]
-    # p4 = [-0.369, 0.2157, 0.582, 2.749, 2.318, 2.340]
-    # p5 = [-0.270, 0.2157, 0.69268, 2.749, 2.318, 2.340]
-    # p6 = [-0.40645, 0.2157, 0.69268, 2.749, 2.318, 2.340]
-
-    small_time_step = 0.008  # [second]
+    small_time_step = 0.01  # [second]
     step_joint = 1  # step of joint [deg]
-    via_points_count = 10
+    p_list = [p1, p2, p3, p4, p5, p6]
+    via_points_count = len(p_list)
     alpha = (via_points_count) * [50]  # interval counts * [desired angular acceleration]
-    td = (via_points_count) * [1]  # interval counts * [desired time duration [s]]
+    td = (via_points_count) * [5]  # interval counts * [desired time duration [s]]
     ############################
 
-    theta_list = np.concatenate((create_traj(p1, p2), create_traj(p2, p3), create_traj(p3, p4), create_traj(p4, p5), create_traj(p5, p6)), axis=0)
+    theta_list = create_traj(p_list)
     # theta_list += create_traj(p2, p3)
     # theta_list += create_traj(p3, p4)
     # theta_list += create_traj(p4, p5)
     # theta_list += create_traj(p5, p6)
 
-    # for theta1, theta2, theta3, theta4, theta5, theta6 in theta_list:
-    #     print("servoj(get_inverse_kin(p[{},{},{},{},{},{}]), 0, 0, {}, 0.1, 300)".format(theta1, theta2, theta3,
-    #                                                                                      theta4, theta5, theta6,
-    #                                                                                      small_time_step))
-    #     s.send(bytes(
-    #         "servoj(get_inverse_kin(p[{},{},{},{},{},{}]), 0, 0, {}, 0.1, 300)".format(theta1, theta2, theta3,
-    #                                                                                    theta4, theta5, theta6,
-    #                                                                                    small_time_step) + "\n",
-    #         "utf-8"))
+    for theta1, theta2, theta3, theta4, theta5, theta6 in theta_list:
+        print("servoj(get_inverse_kin(p[{},{},{},{},{},{}]), 0, 0, {}, 0.1, 300)".format(theta1, theta2, theta3,
+                                                                                         theta4, theta5, theta6,
+                                                                                         small_time_step))
+        s.send(bytes(
+            "servoj(get_inverse_kin(p[{},{},{},{},{},{}]), 0, 0, {}, 0.1, 300)".format(theta1, theta2, theta3,
+                                                                                       theta4, theta5, theta6,
+                                                                                       small_time_step) + "\n",
+            "utf-8"))
 
     time.sleep(100)
     print("Finished")
