@@ -207,7 +207,7 @@ def generate_via_point_theta(theta_i, theta_f, via_points_count):
 
 
 def filter_list_length(ll):
-    min_length = min([len(theta) for theta in theta_list_6_joints])
+    min_length = min([len(theta) for theta in ll])
 
     filtered_ll = []
     for l in ll:
@@ -240,7 +240,7 @@ def create_traj(p1, p2):
     theta_list = np.concatenate((theta_list_6_joints[0], theta_list_6_joints[1], theta_list_6_joints[2],
                                  theta_list_6_joints[3], theta_list_6_joints[4], theta_list_6_joints[5]), axis=1)
     # print(theta_list)
-    return theta_list
+    return np.array(theta_list)
 
 
 if __name__ == '__main__':
@@ -257,35 +257,43 @@ if __name__ == '__main__':
     # move in star
 
     ######## parameter #########
-    p1 = [-0.40645, 0.2157, 0.59268, 2.749, 2.318, 2.340]
-    p2 = [-0.307, 0.2157, 0.555, 2.749, 2.318, 2.340]
-    p3 = [-0.2598, 0.2157, 0.68118, 2.749, 2.318, 2.340]
-    p3 = [-0.2598, 0.2157, 0.68118, 2.749, 2.318, 2.340]
-    p3 = [-0.2598, 0.2157, 0.68118, 2.749, 2.318, 2.340]
+    p0 = np.array([-0.40645, 0.2157, 0.69268, 2.749, 2.318, 2.340])
+    p1 = p0 + np.array([0.058, 0, -0.081, 0, 0, 0])
+    p2 = p0 + np.array([-0.095, 0, 0.031, 0, 0, 0])
+    p3 = p0 + np.array([0.095, 0, 0.031, 0, 0, 0])
+    p4 = p0 + np.array([-0.058, 0, -0.081, 0, 0, 0])
+    p5 = p0 + np.array([0, 0, 0.1, 0, 0, 0])
+    p6 = p1
+
+    # p1 = [-0.40645, 0.2157, 0.69268, 2.749, 2.318, 2.340]
+    # p2 = [-0.307, 0.2157, 0.582, 2.749, 2.318, 2.340]
+    # p3 = [-0.311, 0.2157, 0.76268, 2.749, 2.318, 2.340]
+    # p4 = [-0.369, 0.2157, 0.582, 2.749, 2.318, 2.340]
+    # p5 = [-0.270, 0.2157, 0.69268, 2.749, 2.318, 2.340]
+    # p6 = [-0.40645, 0.2157, 0.69268, 2.749, 2.318, 2.340]
 
     small_time_step = 0.008  # [second]
     step_joint = 1  # step of joint [deg]
     via_points_count = 10
     alpha = (via_points_count) * [50]  # interval counts * [desired angular acceleration]
-    td = (via_points_count) * [5]  # interval counts * [desired time duration [s]]
+    td = (via_points_count) * [1]  # interval counts * [desired time duration [s]]
     ############################
 
-    theta_list = []
-    theta_list.append(create_traj(p1, p2))
-    theta_list.append(create_traj(p2, p3))
-    theta_list.append(create_traj(p3, p4))
-    theta_list.append(create_traj(p4, p5))
-    theta_list.append(create_traj(p5, p6))
+    theta_list = np.concatenate((create_traj(p1, p2), create_traj(p2, p3), create_traj(p3, p4), create_traj(p4, p5), create_traj(p5, p6)), axis=0)
+    # theta_list += create_traj(p2, p3)
+    # theta_list += create_traj(p3, p4)
+    # theta_list += create_traj(p4, p5)
+    # theta_list += create_traj(p5, p6)
 
     for theta1, theta2, theta3, theta4, theta5, theta6 in theta_list:
-        print("servoj(get_inverse_kin(p[{},{},{},{},{},{}]), 0, 0, {}, 0.1, 1000)".format(theta1, theta2, theta3,
-                                                                                          theta4, theta5, theta6,
-                                                                                          small_time_step))
+        print("servoj(get_inverse_kin(p[{},{},{},{},{},{}]), 0, 0, {}, 0.1, 300)".format(theta1, theta2, theta3,
+                                                                                         theta4, theta5, theta6,
+                                                                                         small_time_step))
         s.send(bytes(
-            "servoj(get_inverse_kin(p[{},{},{},{},{},{}]), 0, 0, {}, 0.1, 1000)".format(theta1, theta2, theta3,
-                                                                                        theta4, theta5, theta6,
-                                                                                        small_time_step) + "\n",
+            "servoj(get_inverse_kin(p[{},{},{},{},{},{}]), 0, 0, {}, 0.1, 300)".format(theta1, theta2, theta3,
+                                                                                       theta4, theta5, theta6,
+                                                                                       small_time_step) + "\n",
             "utf-8"))
 
-    time.sleep(10)
+    time.sleep(100)
     print("Finished")

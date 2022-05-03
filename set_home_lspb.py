@@ -11,6 +11,8 @@
 
 import socket
 import time
+import numpy as np
+
 
 def main():
     # Establish connection to controller
@@ -23,14 +25,20 @@ def main():
     time.sleep(5)
     # move in square
 
-    current_joint = "[d2r(0),d2r(-100),d2r(90.24),d2r(-90),d2r(-180),d2r(0)]"
+    current_joint = "[d2r(0.17),d2r(-88.15),d2r(51.81),d2r(-17.19),d2r(-180.2),d2r(46.23)]"
     # current_joint = "[d2r(0),d2r(-100.82),d2r(56.36),d2r(-90),d2r(-180),d2r(0)]"
     # current_joint = "[d2r(0), d2r(-110.55), d2r(75.48), d2r(-34.35), d2r(-180), d2r(30.33)]"
+
+    p0 = np.array([-0.40645, 0.2157, 0.69268, 2.749, 2.318, 2.340])
+    p1 = p0 + np.array([0.058, 0, -0.081, 0, 0, 0])
+
     # start
-    s.send(bytes("movej({},1,0.25,10,0)".format(current_joint) + "\n", "utf-8"))
+    # s.send(bytes("movej({},1,0.25,10,0)".format(current_joint) + "\n", "utf-8"))
+    s.send(bytes("movel({}, )".format(p1) + "\n", "utf-8"))
     time.sleep(3)
 
-    print("Finished")
+    print("Finished.. home set")
+
 
 if __name__ == '__main__':
     print("program running...")
