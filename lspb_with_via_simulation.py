@@ -201,14 +201,14 @@ if __name__ == "__main__":
     p1 = [400, 400]
     p2 = [500, 500]
     step = 10 # step of x [mm]
-    small_time_step = 0.001 # [second]
-    alpha = int((p2[0] - p1[0]) / step) * [20]  # interval counts * [desired angular acceleration]
-    td = int((p2[0] - p1[0]) / step) * [0.1]  # interval counts * [desired time duration [s]]
+    small_time_step = 0.01 # [second]
+    alpha = int((p2[0] - p1[0]) / step) * [10]  # interval counts * [desired angular acceleration]
+    td = int((p2[0] - p1[0]) / step) * [1]  # interval counts * [desired time duration [s]]
     ############################
 
     x_via_list, y_via_list = generate_via_point(p1, p2, step=step)
     # plot(x_via_list, y_via_list)
-    plt.plot(x_via_list, y_via_list, "ro")
+    # plt.plot(x_via_list, y_via_list, "ro")
 
     theta_via_points1 = []
     theta_via_points2 = []
@@ -236,5 +236,6 @@ if __name__ == "__main__":
     print(theta_list)
     x_list, y_list = fk(theta_list, is_deg=False)
     plt.plot(x_list, y_list, "bo")
+    plt.plot(x_via_list, y_via_list, "ro")
 
     plt.show()
