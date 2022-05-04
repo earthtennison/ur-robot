@@ -179,30 +179,20 @@ def plot(y_list, x_list):
     plt.show()
 
 
-def generate_via_point(p1, p2, step=10):
-    """
-    p1, p2 is end point
-    step is the step interpolating x axis (mm)
-    """
-    m = (p2[1] - p1[1]) / (p2[0] - p1[0])
-    b = p1[1] - m * p1[0]
-
-    x_via_list = []
-    y_via_list = []
-    for x in np.arange(p1[0], p2[0], step):
-        x_via_list.append(x)
-        y_via_list.append(m * x + b)
-
-    return x_via_list, y_via_list
-
-
-def generate_via_point_theta(theta_i, theta_f, via_points_count):
+def generate_via_point_theta(p_list, via_points_count):
     theta_via_list = []
-    step = (theta_f - theta_i) / via_points_count
-    if step == 0:
-        return [theta_i] * (via_points_count)
-    for theta in np.linspace(theta_i, theta_f, num=via_points_count, endpoint=True):
-        theta_via_list.append(theta)
+    endpoint = False
+    for i in range(len(p_list) - 1):
+        for theta in np.linspace(p_list[i], p_list[i + 1], num=via_points_count, endpoint=True):
+            theta_via_list.append(theta)
+        if i < len(p_list) - 2:
+            theta_via_list = theta_via_list[:-1]
+        else:
+            continue
+    # step = (theta_f - theta_i) / via_points_count
+    # if step == 0:
+    #     return [theta_i] * (via_points_count)
+
     return theta_via_list
 
 
@@ -218,15 +208,12 @@ def filter_list_length(ll):
 
 
 def create_traj(p_list):
-
     theta_6_joints = np.transpose(np.array(p_list))
-    print(theta_6_joints)
-
+    print(len(p_list))
     theta_list_6_joints = []
-    for i,theta_via_points in enumerate(theta_6_joints):
-        if theta_via_points[0] == theta_via_points[1]:
-            theta_list_6_joints.append([theta_via_points[0]] * int(td[i]*5/small_time_step))
-            print("im in")
+    for i, theta_via_points in enumerate(theta_6_joints):
+        if all(point == theta_via_points[0] for point in theta_via_points):
+            theta_list_6_joints.append([theta_via_points[0]] * int(td[i] * (len(p_list)) / small_time_step))
             continue
         tn, tn_via, v, new_alpha = get_time(theta_via_points, alpha, td)
         theta_list1 = lspb(tn, tn_via, v, new_alpha, theta_via_points[0], step=small_time_step)
@@ -240,7 +227,6 @@ def create_traj(p_list):
     print([len(theta) for theta in theta_list_6_joints])
     # print(theta_list_6_joints)
     theta_list_6_joints = filter_list_length(theta_list_6_joints)
-
 
     theta_list = np.concatenate((theta_list_6_joints[0], theta_list_6_joints[1], theta_list_6_joints[2],
                                  theta_list_6_joints[3], theta_list_6_joints[4], theta_list_6_joints[5]), axis=1)
@@ -262,7 +248,8 @@ if __name__ == '__main__':
     # move in star
 
     ######## parameter #########
-    p0 = np.array([-0.40645, 0.2157, 0.69268, 2.749, 2.318, 2.340])
+    # p0 = np.array([-0.40645, 0.2157, 0.69268, 2.749, 2.318, 2.340])
+    p0 = np.array([-0.30645, 0.2157, 0.69268, 2.749, 2.318, 2.340])
     p1 = p0 + np.array([0.058, 0, -0.081, 0, 0, 0])
     p2 = p0 + np.array([-0.095, 0, 0.031, 0, 0, 0])
     p3 = p0 + np.array([0.095, 0, 0.031, 0, 0, 0])
@@ -270,12 +257,14 @@ if __name__ == '__main__':
     p5 = p0 + np.array([0, 0, 0.1, 0, 0, 0])
     p6 = p1
 
-    small_time_step = 0.01  # [second]
+    small_time_step = 0.008  # [second]
     step_joint = 1  # step of joint [deg]
     p_list = [p1, p2, p3, p4, p5, p6]
+    # p_list = [p1, p1, p2, p2, p2, p3, p3, p3, p4, p4, p4, p5, p5, p5, p6, p6]
+    p_list = generate_via_point_theta(p_list, via_points_count=10)
     via_points_count = len(p_list)
     alpha = (via_points_count) * [50]  # interval counts * [desired angular acceleration]
-    td = (via_points_count) * [5]  # interval counts * [desired time duration [s]]
+    td = (via_points_count) * [1]  # interval counts * [desired time duration [s]]
     ############################
 
     theta_list = create_traj(p_list)
