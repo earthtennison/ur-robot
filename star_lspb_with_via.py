@@ -25,10 +25,11 @@ def linear_segment(pose_i, v, t):
 
 def get_time(theta, alpha, td):
     """
+    calculate the list of time duration for blending and linear segment, also velocity at linear segment and accel at blend
+    Note: this function can be calculated in both joint space (theta) and cartesian space (x, y)
     theta = [theta1, theta2, theta3]
     alpha = [a1, a2, a3]
     td = [td12, td23]
-
     """
     tn = []
     tn_n_1 = []
@@ -196,15 +197,15 @@ if __name__ == '__main__':
     td = (via_points_count) * [1]  # interval counts * [desired time duration [s]]
     ############################
 
-    theta_list = np.concatenate((create_traj(p1, p2), create_traj(p2, p3), create_traj(p3, p4), create_traj(p4, p5), create_traj(p5, p6)), axis=0)
+    poses_list = np.concatenate((create_traj(p1, p2), create_traj(p2, p3), create_traj(p3, p4), create_traj(p4, p5), create_traj(p5, p6)), axis=0)
 
-    for theta1, theta2, theta3, theta4, theta5, theta6 in theta_list:
-        print("servoj(get_inverse_kin(p[{},{},{},{},{},{}]), 0, 0, {}, 0.1, 300)".format(theta1, theta2, theta3,
-                                                                                         theta4, theta5, theta6,
+    for x, y, z, row, pitch, yaw in poses_list:
+        print("servoj(get_inverse_kin(p[{},{},{},{},{},{}]), 0, 0, {}, 0.1, 300)".format(x, y, z,
+                                                                                         row, pitch, yaw,
                                                                                          small_time_step))
         s.send(bytes(
-            "servoj(get_inverse_kin(p[{},{},{},{},{},{}]), 0, 0, {}, 0.1, 300)".format(theta1, theta2, theta3,
-                                                                                       theta4, theta5, theta6,
+            "servoj(get_inverse_kin(p[{},{},{},{},{},{}]), 0, 0, {}, 0.1, 300)".format(x, y, z,
+                                                                                       row, pitch, yaw,
                                                                                        small_time_step) + "\n",
             "utf-8"))
 
