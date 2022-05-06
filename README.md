@@ -1,3 +1,6 @@
+# Robot Arm Trajectory Generation using LSPB
+UR5 documentation for socket communication [link](https://www.siemens-pro.ru/docs/ur/scriptManual.pdf)
+
 Run Simulation LSPB without viapoint <br>
 `$ python lspb_without_via_simulation.py`
 
